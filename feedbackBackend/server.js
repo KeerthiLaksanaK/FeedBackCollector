@@ -8,14 +8,36 @@ const Feedback = require('./models/Feedback')
 const app = express()
 const PORT = process.env.PORT || 8002
 
+// Environment validation
+if (!process.env.MONGODB_URI) {
+    console.error('Missing required environment variables:');
+    console.error('- MONGODB_URI is required');
+    process.exit(1);
+}
+
 // Middleware
-app.use(cors())
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:3000', 
+        'https://feed-backcollector.vercel.app'
+    ],
+    credentials: true
+}))
 app.use(express.json())
 
 // MongoDB Connection
+if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI environment variable is not set');
+    process.exit(1);
+}
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err))
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
+    })
 
 // Routes
 app.get('/', (req, res) => {
