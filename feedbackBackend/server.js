@@ -16,14 +16,7 @@ if (!process.env.MONGODB_URI) {
 }
 
 // Middleware
-app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:3000', 
-        'https://feed-backcollector.vercel.app'
-    ],
-    credentials: true
-}))
+app.use(cors())
 app.use(express.json())
 
 // MongoDB Connection
@@ -47,25 +40,30 @@ app.get('/', (req, res) => {
 // Auth Routes
 app.post('/api/register', async (req, res) => {
     try {
+        console.log('Register request received:', req.body)
         const { name, email, password } = req.body
         
         if (!name || !email || !password) {
+            console.log('Missing fields:', { name: !!name, email: !!email, password: !!password })
             return res.status(400).json({ error: 'All fields are required' })
         }
 
         const existingUser = await User.findOne({ email })
         if (existingUser) {
+            console.log('User already exists:', email)
             return res.status(400).json({ error: 'User already exists' })
         }
 
         const user = new User({ name, email, password })
         await user.save()
+        console.log('User registered successfully:', email)
 
         res.status(201).json({ 
             message: 'User registered successfully', 
             user: { id: user._id, name: user.name, email: user.email } 
         })
     } catch (error) {
+        console.error('Registration error:', error)
         res.status(500).json({ error: 'Server error' })
     }
 })
